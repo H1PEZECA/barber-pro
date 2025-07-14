@@ -19,11 +19,7 @@ const HomePage = () => {
         {/*BUSCA*/}
         <div className="flex items-center gap-1">
           <Input className="rounded-md" placeholder="Busque um serviço..." />
-          <Button
-            className="rounded-md bg-purple-700 text-white hover:bg-purple-700"
-            variant="outline"
-            size="icon"
-          >
+          <Button className="rounded-md" size="icon">
             <SearchIcon />
           </Button>
         </div>
@@ -42,10 +38,7 @@ const HomePage = () => {
           <CardContent className="flex items-center justify-between p-4">
             {/* ESQUERDA */}
             <div className="flex flex-col gap-2">
-              <Badge
-                variant="secondary"
-                className="w-fit rounded-xl bg-purple-700 px-4 py-1 text-sm text-white"
-              >
+              <Badge className="w-fit rounded-xl px-4 py-1 text-sm">
                 Confirmado
               </Badge>
               <h3 className="mt-1 text-lg font-semibold">Corte de Cabelo</h3>
@@ -60,7 +53,7 @@ const HomePage = () => {
               </div>
             </div>
             {/* DIREITA */}
-            <div className="flex min-w-[90px] flex-col items-center justify-center">
+            <div className="flex min-w-[90px] flex-col items-center justify-center border-l-2 border-solid">
               <span className="text-sm">Fevereiro</span>
               <span className="mt-1 text-3xl font-semibold leading-none">
                 14
