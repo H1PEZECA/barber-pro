@@ -39,31 +39,33 @@ const HomePage = () => {
 
         {/*AGENDANMENTOS*/}
         <Card className="mt-6">
-          <CardContent className="flex justify-between p-0">
+          <CardContent className="flex items-center justify-between p-4">
             {/* ESQUERDA */}
-            <div className="flex flex-col gap-2 py-5">
+            <div className="flex flex-col gap-2">
               <Badge
                 variant="secondary"
-                className="w-fit rounded-xl bg-purple-700"
+                className="w-fit rounded-xl bg-purple-700 px-4 py-1 text-sm text-white"
               >
                 Confirmado
               </Badge>
-              <h3 className="text-lg font-semibold">Corte de Cabelo</h3>
+              <h3 className="mt-1 text-lg font-semibold">Corte de Cabelo</h3>
               <div className="mt-2 flex items-center gap-2">
-                <Avatar className="h-6 w-6">
+                <Avatar className="h-7 w-7">
                   <AvatarImage
                     src="https://utfs.io/f/60f24f5c-9ed3-40ba-8c92-0cd1dcd043f9-16w.png"
                     alt="Avatar"
                   />
                 </Avatar>
-                <p>Barbearia FSW</p>
+                <span className="text-base">Barbearia FSW</span>
               </div>
             </div>
             {/* DIREITA */}
-            <div className="flex flex-col items-end justify-between">
-              <h3 className="font-semibold">Fevereiro</h3>
-              <p>14</p>
-              <p>10:00</p>
+            <div className="flex min-w-[90px] flex-col items-center justify-center">
+              <span className="text-sm">Fevereiro</span>
+              <span className="mt-1 text-3xl font-semibold leading-none">
+                14
+              </span>
+              <span className="mt-1 text-sm">10:00</span>
             </div>
           </CardContent>
         </Card>
