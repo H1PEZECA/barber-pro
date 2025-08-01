@@ -8,9 +8,15 @@ import { Button } from "./_components/ui/button"
 import { Card, CardContent } from "./_components/ui/card"
 import { Input } from "./_components/ui/input"
 import { db } from "./_lib/prisma"
+import Footer from "./_components/footer"
 const Home = async () => {
   // log db
   const barbershops = await db.barbershop.findMany({})
+  const popularBarbershops = await db.barbershop.findMany({
+    orderBy: {
+      name: "desc",
+    },
+  })
 
   return (
     <div>
@@ -25,6 +31,54 @@ const Home = async () => {
           <Input placeholder="Buscar..." />
           <Button>
             <SearchIcon />
+          </Button>
+        </div>
+
+        {/*Quick Search*/}
+        <div className="mt-6 flex gap-3 overflow-x-scroll [&::-webkit-scrollbar]:hidden">
+          <Button className="gap-2" variant="secondary">
+            <Image src="/cabelo.svg" alt="Cabelo" width={16} height={16} />
+            Cabelo
+          </Button>
+
+          <Button className="gap-2" variant="secondary">
+            <Image src="/barba.svg" alt="Barba" width={16} height={16} />
+            Barba
+          </Button>
+
+          <Button className="gap-2" variant="secondary">
+            <Image
+              src="/acabamento.svg"
+              alt="Acabamento"
+              width={16}
+              height={16}
+            />
+            Acabamento
+          </Button>
+
+          <Button className="gap-2" variant="secondary">
+            <Image
+              src="/hidratacao.svg"
+              alt="Hidratação"
+              width={16}
+              height={16}
+            />
+            Hidratação
+          </Button>
+
+          <Button className="gap-2" variant="secondary">
+            <Image src="/massage.svg" alt="Massagem" width={16} height={16} />
+            Massagem
+          </Button>
+
+          <Button className="gap-2" variant="secondary">
+            <Image
+              src="/sobrancelha.svg"
+              alt="Sobrancelha"
+              width={16}
+              height={16}
+            />
+            Sobrancelha
           </Button>
         </div>
 
@@ -78,14 +132,15 @@ const Home = async () => {
         {/*Popular Barbershops */}
         <h2 className="mb-3 mt-6 text-sm uppercase text-gray-400">Populares</h2>
         <div className="flex gap-4 overflow-auto [&::-webkit-scrollbar]:hidden">
-          {barbershops.map((barbershop) => (
+          {popularBarbershops.map((barbershop) => (
             <BarbershopItem key={barbershop.id} barbershop={barbershop} />
           ))}
         </div>
       </div>
+      {/*Footer*/}
+      <Footer />
     </div>
   )
 }
 
 export default Home
-;<div></div>
