@@ -1,12 +1,17 @@
 import { SearchIcon } from "lucide-react"
 import Image from "next/image"
+import Header from "./_components/header"
 import { Avatar, AvatarImage } from "./_components/ui/avatar"
 import { Badge } from "./_components/ui/badge"
 import { Button } from "./_components/ui/button"
 import { Card, CardContent } from "./_components/ui/card"
-import Header from "./_components/ui/header"
 import { Input } from "./_components/ui/input"
-const Home = () => {
+import { db } from "./_lib/prisma"
+import BarbershopItem from "./_components/barbershop-item"
+const Home = async () => {
+  // log db
+  const barbershops = await db.barbershop.findMany({})
+
   return (
     <div>
       {/* Header*/}
@@ -34,7 +39,9 @@ const Home = () => {
         </div>
 
         {/*Bookings*/}
-        <h2 className="mb-3 mt-6 text-xl font-bold uppercase">agendamentos</h2>
+        <h2 className="mb-3 mt-6 text-sm uppercase text-gray-400">
+          agendamentos
+        </h2>
         <Card>
           <CardContent className="flex justify-between p-0">
             {/*Left*/}
@@ -58,6 +65,13 @@ const Home = () => {
             </div>
           </CardContent>
         </Card>
+
+        <h2 className="mb-3 mt-6 text-sm uppercase text-gray-400">
+          agendamentos
+        </h2>
+        {barbershops.map((barbershop) => (
+          <BarbershopItem key={barbershop.id} barbershop={barbershop} />
+        ))}
       </div>
     </div>
   )
