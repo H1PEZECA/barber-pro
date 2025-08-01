@@ -65,7 +65,7 @@ const Home = async () => {
             </div>
           </CardContent>
         </Card>
-
+        {/*Recommended Barbershops */}
         <h2 className="mb-3 mt-6 text-sm uppercase text-gray-400">
           recomendados
         </h2>
