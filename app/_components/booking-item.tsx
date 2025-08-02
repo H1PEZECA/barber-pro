@@ -6,7 +6,9 @@ import { Card, CardContent } from "./ui/card"
 const BookingItem = () => {
   return (
     <>
-      <TextUpperCard title="agendamentos" />
+      <div className="mt-6">
+        <TextUpperCard title="agendamentos" />
+      </div>
       <Card>
         <CardContent className="flex justify-between p-0">
           {/*Left*/}

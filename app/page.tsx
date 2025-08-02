@@ -4,11 +4,11 @@ import BarbershopItem from "./_components/barbershop-item"
 import BookingItem from "./_components/booking-item"
 import Footer from "./_components/footer"
 import Header from "./_components/header"
+import TextUpperCard from "./_components/text-upper-card"
 import { Button } from "./_components/ui/button"
 import { Input } from "./_components/ui/input"
 import { quickSearchOptions } from "./_constants/search"
 import { db } from "./_lib/prisma"
-import TextUpperCard from "./_components/text-upper-card"
 
 const Home = async () => {
   // log db
@@ -64,7 +64,9 @@ const Home = async () => {
         <BookingItem />
 
         {/*Recommended Barbershops */}
-        <TextUpperCard title="recomendados" />
+        <div className="mt-6">
+          <TextUpperCard title="recomendados" />
+        </div>
         <div className="flex gap-4 overflow-auto [&::-webkit-scrollbar]:hidden">
           {barbershops.map((barbershop) => (
             <BarbershopItem key={barbershop.id} barbershop={barbershop} />
@@ -72,7 +74,9 @@ const Home = async () => {
         </div>
 
         {/*Popular Barbershops */}
-        <TextUpperCard title="populares" />
+        <div className="mt-6">
+          <TextUpperCard title="populares" />
+        </div>
         <div className="flex gap-4 overflow-auto [&::-webkit-scrollbar]:hidden">
           {popularBarbershops.map((barbershop) => (
             <BarbershopItem key={barbershop.id} barbershop={barbershop} />
