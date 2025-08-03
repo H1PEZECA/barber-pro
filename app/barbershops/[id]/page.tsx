@@ -1,3 +1,4 @@
+import ServiceItem from "@/app/_components/service-item"
 import TextUpperCard from "@/app/_components/text-upper-card"
 import { Button } from "@/app/_components/ui/button"
 import { db } from "@/app/_lib/prisma"
@@ -14,6 +15,9 @@ const BarbershopPage = async ({ params }: BarbershopPageProps) => {
   // Fetch barbershop data based on the ID from params
   const barbershop = await db.barbershop.findUnique({
     where: { id: params.id },
+    include: {
+      services: true,
+    },
   })
 
   if (!barbershop) {
@@ -68,6 +72,14 @@ const BarbershopPage = async ({ params }: BarbershopPageProps) => {
         <p className="text-justify text-sm text-gray-300">
           {barbershop?.description}
         </p>
+      </div>
+
+      {/*Services*/}
+      <div className="p-5">
+        <TextUpperCard title="Serviços" />
+        {barbershop?.services.map((service) => (
+          <ServiceItem key={service.id} service={service} />
+        ))}
       </div>
     </div>
   )
