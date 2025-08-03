@@ -77,9 +77,11 @@ const BarbershopPage = async ({ params }: BarbershopPageProps) => {
       {/*Services*/}
       <div className="p-5">
         <TextUpperCard title="Serviços" />
-        {barbershop?.services.map((service) => (
-          <ServiceItem key={service.id} service={service} />
-        ))}
+        <div className="space-y-3">
+          {barbershop?.services.map((service) => (
+            <ServiceItem key={service.id} service={service} />
+          ))}
+        </div>
       </div>
     </div>
   )
