@@ -2,7 +2,7 @@ import { SearchIcon } from "lucide-react"
 import Image from "next/image"
 import BarbershopItem from "./_components/barbershop-item"
 import BookingItem from "./_components/booking-item"
-import Footer from "./_components/footer"
+
 import Header from "./_components/header"
 import TextUpperCard from "./_components/text-upper-card"
 import { Button } from "./_components/ui/button"
@@ -83,8 +83,6 @@ const Home = async () => {
           ))}
         </div>
       </div>
-      {/*Footer*/}
-      <Footer />
     </div>
   )
 }
