@@ -1,3 +1,4 @@
+import PhoneItem from "@/app/_components/phone-item"
 import ServiceItem from "@/app/_components/service-item"
 import TextUpperCard from "@/app/_components/text-upper-card"
 import { Button } from "@/app/_components/ui/button"
@@ -75,13 +76,21 @@ const BarbershopPage = async ({ params }: BarbershopPageProps) => {
       </div>
 
       {/*Services*/}
-      <div className="p-5">
+      <div className="space-y-3 border-b border-solid p-5">
         <TextUpperCard title="Serviços" />
         <div className="space-y-3">
           {barbershop?.services.map((service) => (
             <ServiceItem key={service.id} service={service} />
           ))}
         </div>
+      </div>
+
+      {/*Contact*/}
+      <div className="space-y-3 p-5">
+        <TextUpperCard title="Contato" />
+        {barbershop?.phones.map((phone) => (
+          <PhoneItem key={phone} phone={phone} />
+        ))}
       </div>
     </div>
   )
