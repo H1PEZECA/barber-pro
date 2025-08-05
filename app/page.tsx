@@ -1,4 +1,3 @@
-import { SearchIcon } from "lucide-react"
 import Image from "next/image"
 import BarbershopItem from "./_components/barbershop-item"
 import BookingItem from "./_components/booking-item"
@@ -6,9 +5,10 @@ import BookingItem from "./_components/booking-item"
 import Header from "./_components/header"
 import TextUpperCard from "./_components/text-upper-card"
 import { Button } from "./_components/ui/button"
-import { Input } from "./_components/ui/input"
 import { quickSearchOptions } from "./_constants/search"
 import { db } from "./_lib/prisma"
+import Search from "./_components/search"
+import Link from "next/link"
 
 const Home = async () => {
   // log db
@@ -28,24 +28,28 @@ const Home = async () => {
         <p>Quinta-Feira, 31 de Julho</p>
 
         {/*Search*/}
-        <div className="mt-6 flex items-center gap-2">
-          <Input placeholder="Buscar..." />
-          <Button>
-            <SearchIcon />
-          </Button>
+        <div className="mt-6">
+          <Search />
         </div>
 
         {/*Quick Search*/}
         <div className="mt-6 flex gap-3 overflow-x-scroll [&::-webkit-scrollbar]:hidden">
           {quickSearchOptions.map((option) => (
-            <Button key={option.title} className="gap-2" variant="secondary">
-              <Image
-                src={option.image}
-                alt={option.title}
-                width={16}
-                height={16}
-              />
-              {option.title}
+            <Button
+              className="gap-2"
+              variant="secondary"
+              key={option.title}
+              asChild
+            >
+              <Link href={`/barbershops?service=${option.title}`}>
+                <Image
+                  src={option.image}
+                  width={16}
+                  height={16}
+                  alt={option.title}
+                />
+                {option.title}
+              </Link>
             </Button>
           ))}
         </div>

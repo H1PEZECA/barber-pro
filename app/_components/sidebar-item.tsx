@@ -11,7 +11,7 @@ import { signOut, useSession } from "next-auth/react"
 import { Avatar, AvatarImage } from "./ui/avatar"
 import SignInDialog from "./sign-in-dialog"
 
-const SidebarSheet = () => {
+const SidebarItem = () => {
   const { data } = useSession()
   const handleLogoutClick = () => signOut()
 
@@ -101,4 +101,4 @@ const SidebarSheet = () => {
   )
 }
 
-export default SidebarSheet
+export default SidebarItem
