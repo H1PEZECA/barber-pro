@@ -1,23 +1,26 @@
 import PhoneItem from "@/app/_components/phone-item"
 import ServiceItem from "@/app/_components/service-item"
-import SidebarItem from "@/app/_components/sidebar-item"
-import TextUpperCard from "@/app/_components/text-upper-card"
+import SidebarSheet from "@/app/_components/sidebar-item"
 import { Button } from "@/app/_components/ui/button"
 import { Sheet, SheetTrigger } from "@/app/_components/ui/sheet"
 import { db } from "@/app/_lib/prisma"
-import { ChevronLeft, MapPinIcon, MenuIcon, StarIcon } from "lucide-react"
+import { ChevronLeftIcon, MapPinIcon, MenuIcon, StarIcon } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { notFound } from "next/navigation"
+
 interface BarbershopPageProps {
   params: {
     id: string
   }
 }
+
 const BarbershopPage = async ({ params }: BarbershopPageProps) => {
-  // Fetch barbershop data based on the ID from params
+  // chamar o meu banco de dados
   const barbershop = await db.barbershop.findUnique({
-    where: { id: params.id },
+    where: {
+      id: params.id,
+    },
     include: {
       services: true,
     },
@@ -26,76 +29,80 @@ const BarbershopPage = async ({ params }: BarbershopPageProps) => {
   if (!barbershop) {
     return notFound()
   }
+
   return (
     <div>
-      {/*Image*/}
+      {/* IMAGEM */}
       <div className="relative h-[250px] w-full">
         <Image
-          src={barbershop?.imageUrl}
           alt={barbershop.name}
+          src={barbershop?.imageUrl}
           fill
           className="object-cover"
         />
+
         <Button
-          size={"icon"}
-          className="absolute left-4 top-4"
+          size="icon"
           variant="secondary"
+          className="absolute left-4 top-4"
           asChild
         >
           <Link href="/">
-            <ChevronLeft />
+            <ChevronLeftIcon />
           </Link>
         </Button>
 
         <Sheet>
           <SheetTrigger asChild>
             <Button
-              className="absolute right-4 top-4"
               size="icon"
               variant="outline"
+              className="absolute right-4 top-4"
             >
               <MenuIcon />
             </Button>
           </SheetTrigger>
-          <SidebarItem />
+          <SidebarSheet />
         </Sheet>
       </div>
 
-      {/*Barbershop Details*/}
+      {/* TÍTULO */}
       <div className="border-b border-solid p-5">
-        <h1 className="mb-3 text-xl font-bold">{barbershop?.name}</h1>
-        <div className="mb-2 flex items-center gap-1">
+        <h1 className="mb-3 text-xl font-bold">{barbershop.name}</h1>
+        <div className="mb-2 flex items-center gap-2">
           <MapPinIcon className="text-primary" size={18} />
-          <p className="text-sm text-gray-400">{barbershop?.address}</p>
+          <p className="text-sm">{barbershop?.address}</p>
         </div>
-        <div className="flex items-center gap-1">
+
+        <div className="flex items-center gap-2">
           <StarIcon className="fill-primary text-primary" size={18} />
-          <p className="text-sm text-gray-400">5,0 ( 723 Avaliações )</p>
+          <p className="text-sm">5,0 (499 avaliações)</p>
         </div>
       </div>
 
-      {/*Description*/}
-      <div className="mt-0 border-b border-solid p-5">
-        <TextUpperCard title="Sobre Nós" />
-        <p className="text-justify text-sm text-gray-300">
-          {barbershop?.description}
-        </p>
+      {/* DESCRIÇÃO */}
+      <div className="space-y-2 border-b border-solid p-5">
+        <h2 className="text-xs font-bold uppercase text-gray-400">Sobre nós</h2>
+        <p className="text-justify text-sm">{barbershop?.description}</p>
       </div>
 
-      {/*Services*/}
+      {/* SERVIÇOS */}
       <div className="space-y-3 border-b border-solid p-5">
-        <TextUpperCard title="Serviços" />
+        <h2 className="text-xs font-bold uppercase text-gray-400">Serviços</h2>
         <div className="space-y-3">
-          {barbershop?.services.map((service) => (
-            <ServiceItem key={service.id} service={service} />
+          {barbershop.services.map((service) => (
+            <ServiceItem
+              key={service.id}
+              barbershop={JSON.parse(JSON.stringify(barbershop))}
+              service={JSON.parse(JSON.stringify(service))}
+            />
           ))}
         </div>
       </div>
 
-      {/*Contact*/}
+      {/* CONTATO */}
       <div className="space-y-3 p-5">
-        <TextUpperCard title="Contato" />
-        {barbershop?.phones.map((phone) => (
+        {barbershop.phones.map((phone) => (
           <PhoneItem key={phone} phone={phone} />
         ))}
       </div>

@@ -19,6 +19,17 @@ const Home = async () => {
     },
   })
 
+  // Fetch a booking with service and barbershop included
+  const booking = await db.booking.findFirst({
+    include: {
+      service: {
+        include: {
+          barbershop: true,
+        },
+      },
+    },
+  })
+
   return (
     <div>
       {/* Header*/}
@@ -55,7 +66,7 @@ const Home = async () => {
         </div>
 
         {/*Banner*/}
-        <div className="relative mt-6 h-[150px] w-full">
+        <div className="relative mb-6 mt-6 h-[150px] w-full">
           <Image
             src="/banner.svg"
             alt="Banner BarberPro"
@@ -65,7 +76,7 @@ const Home = async () => {
         </div>
 
         {/*Bookings*/}
-        <BookingItem />
+        {booking && <BookingItem booking={booking} />}
 
         {/*Recommended Barbershops */}
         <div className="mt-6">
