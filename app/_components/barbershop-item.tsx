@@ -32,7 +32,7 @@ const BarbershopItem = ({ barbershop }: BarbershopItemProps) => {
         </div>
 
         {/*Text*/}
-        <div className="py-3">
+        <div className="ml-2 mr-2 py-3">
           <h3 className="truncate text-sm font-semibold">{barbershop.name}</h3>
           <p className="truncate text-sm text-gray-400">{barbershop.address}</p>
           <Button variant={"secondary"} className="mt-3 w-full" asChild>

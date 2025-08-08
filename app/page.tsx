@@ -76,7 +76,9 @@ const Home = async () => {
         </div>
 
         {/*Bookings*/}
-        {booking && <BookingItem booking={booking} />}
+        <div className="min-w-[90%] overflow-auto [&::-webkit-scrollbar]:hidden">
+          {booking && <BookingItem booking={booking} />}
+        </div>
 
         {/*Recommended Barbershops */}
         <div className="mt-6">
