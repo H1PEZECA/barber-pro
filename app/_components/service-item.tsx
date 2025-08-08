@@ -1,9 +1,21 @@
 "use client"
 
 import { Barbershop, BarbershopService, Booking } from "@prisma/client"
+import { isPast, isToday, set } from "date-fns"
+import { ptBR } from "date-fns/locale"
+import { useSession } from "next-auth/react"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
+import { useEffect, useMemo, useState } from "react"
+import { toast } from "sonner"
+import { createBooking } from "../_actions/create-booking"
+import { getBookings } from "../_actions/get-bookings"
+import BookingSummary from "./booking-summary"
+import SignInDialog from "./sign-in-dialog"
 import { Button } from "./ui/button"
+import { Calendar } from "./ui/calendar"
 import { Card, CardContent } from "./ui/card"
+import { Dialog, DialogContent } from "./ui/dialog"
 import {
   Sheet,
   SheetContent,
@@ -11,18 +23,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "./ui/sheet"
-import { Calendar } from "./ui/calendar"
-import { ptBR } from "date-fns/locale"
-import { useEffect, useMemo, useState } from "react"
-import { isPast, isToday, set } from "date-fns"
-import { createBooking } from "../_actions/create-booking"
-import { useSession } from "next-auth/react"
-import { toast } from "sonner"
-import { getBookings } from "../_actions/get-bookings"
-import { Dialog, DialogContent } from "./ui/dialog"
-import SignInDialog from "./sign-in-dialog"
-import BookingSummary from "./booking-summary"
-import { useRouter } from "next/navigation"
 
 interface ServiceItemProps {
   service: BarbershopService
@@ -155,6 +155,13 @@ const ServiceItem = ({ service, barbershop }: ServiceItemProps) => {
 
   const timeList = useMemo(() => {
     if (!selectedDay) return []
+    const today = new Date()
+    const maxDate = new Date()
+    maxDate.setDate(today.getDate() + 30)
+    // Se o dia está no passado ou acima de 30 dias, retorna lista vazia
+    if (selectedDay < today || selectedDay > maxDate) {
+      return []
+    }
     return getTimeList({
       bookings: dayBookings,
       selectedDay,
@@ -201,16 +208,17 @@ const ServiceItem = ({ service, barbershop }: ServiceItemProps) => {
 
                 <SheetContent className="px-0">
                   <SheetHeader>
-                    <SheetTitle>Fazer Reserva</SheetTitle>
+                    <SheetTitle className="text-center">
+                      Fazer Reserva
+                    </SheetTitle>
                   </SheetHeader>
 
-                  <div className="ml-16 border-b border-solid py-5">
+                  <div className="border-b border-solid py-5">
                     <Calendar
                       mode="single"
                       locale={ptBR}
                       selected={selectedDay}
                       onSelect={handleDateSelect}
-                      fromDate={new Date()}
                       styles={{
                         head_cell: {
                           width: "100%",
@@ -230,15 +238,13 @@ const ServiceItem = ({ service, barbershop }: ServiceItemProps) => {
                           width: "32px",
                           height: "32px",
                         },
-                        caption: {
-                          textTransform: "capitalize",
-                        },
                       }}
+                      className="ml-16 capitalize"
                     />
                   </div>
 
                   {selectedDay && (
-                    <div className="flex gap-3 overflow-x-auto border-b border-solid p-5 [&::-webkit-scrollbar]:hidden">
+                    <div className="flex gap-3 overflow-x-auto border-b border-solid p-5">
                       {timeList.length > 0 ? (
                         timeList.map((time) => (
                           <Button
