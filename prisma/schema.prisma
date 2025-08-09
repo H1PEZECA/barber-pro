@@ -18,6 +18,7 @@ model User {
   bookings      Booking[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  role          UserRole @default(USER)
 }
 
 model Account {
@@ -91,4 +92,10 @@ model Booking {
   date      DateTime
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
+}
+
+enum UserRole {
+  USER
+  EMPLOYEE
+  ADMIN
 }
