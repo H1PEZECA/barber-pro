@@ -4,19 +4,15 @@ const prisma = new PrismaClient()
 
 async function seedDatabase() {
   try {
-    console.log("🚀 Iniciando seed do banco de dados...")
+    console.log("🚀 Iniciando seed simplificado...")
 
-    // Verificar se já existem dados
-    const existingBarbershops = await prisma.barbershop.count()
-    console.log(`📊 Barbearias existentes: ${existingBarbershops}`)
-
-    // Se você quiser resetar todos os dados, descomente as linhas abaixo:
-    // console.log("🧹 Limpando dados existentes...");
-    // await prisma.booking.deleteMany();
-    // await prisma.barber.deleteMany();
-    // await prisma.barbershopService.deleteMany();
-    // await prisma.barbershop.deleteMany();
-    // await prisma.user.deleteMany();
+    // LIMPAR TUDO PRIMEIRO
+    console.log("🧹 Limpando dados existentes...")
+    await prisma.booking.deleteMany()
+    await prisma.barber.deleteMany()
+    await prisma.barbershopService.deleteMany()
+    await prisma.barbershop.deleteMany()
+    // NÃO deletar usuários para preservar auth
 
     const images = [
       "https://utfs.io/f/c97a2dc9-cf62-468b-a851-bfd2bdde775f-16p.png",
@@ -31,7 +27,6 @@ async function seedDatabase() {
       "https://utfs.io/f/e995db6d-df96-4658-99f5-11132fd931e1-17j.png",
     ]
 
-    // Nomes criativos para as barbearias
     const creativeNames = [
       "Barbearia Vintage",
       "Corte & Estilo",
@@ -45,7 +40,6 @@ async function seedDatabase() {
       "Estilo Clássico",
     ]
 
-    // Endereços fictícios para as barbearias
     const addresses = [
       "Rua da Barbearia, 123",
       "Avenida dos Cortes, 456",
@@ -104,11 +98,11 @@ async function seedDatabase() {
       },
     ]
 
-    // SEU ID DE USUÁRIO (substitua pelo email real que você usa no Google)
+    // SEU ID - SUBSTITUA O EMAIL PELO SEU EMAIL REAL
     const ADMIN_USER_ID = "cmdx6rwbp000197h8uvtixmrd"
-    const ADMIN_EMAIL = "josemendess004@gmail.com" // SUBSTITUA PELO SEU EMAIL REAL
+    const ADMIN_EMAIL = "seu-email@gmail.com" // 🚨 MUDE AQUI
 
-    // Criar ou buscar o usuário admin
+    // Verificar se o usuário admin existe, se não, criar
     let adminUser = await prisma.user.findUnique({
       where: { id: ADMIN_USER_ID },
     })
@@ -123,11 +117,11 @@ async function seedDatabase() {
           image: "https://via.placeholder.com/150",
         },
       })
-    } else {
-      console.log("👤 Usuário admin encontrado:", adminUser.name)
     }
 
-    // Nomes fictícios para barbeiros
+    console.log(`👤 Admin: ${adminUser.name} (${adminUser.email})`)
+
+    // Nomes e emails para barbeiros fictícios
     const barberNames = [
       "Carlos Silva",
       "João Santos",
@@ -152,114 +146,79 @@ async function seedDatabase() {
       "andre@barberpro.com",
     ]
 
-    // Criar 10 barbearias (ou pular se já existirem)
-    const barbershops = []
+    // Criar 10 barbearias
     for (let i = 0; i < 10; i++) {
-      const name = creativeNames[i]
-      const address = addresses[i]
-      const imageUrl = images[i]
+      console.log(`🏪 Criando barbearia ${i + 1}/10: ${creativeNames[i]}`)
 
-      // Verificar se a barbearia já existe
-      let barbershop = await prisma.barbershop.findFirst({
-        where: { name },
+      // Criar barbearia
+      const barbershop = await prisma.barbershop.create({
+        data: {
+          name: creativeNames[i],
+          address: addresses[i],
+          imageUrl: images[i],
+          phones: ["(11) 99999-9999", "(11) 99999-9999"],
+          description:
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec ac augue ullamcorper, pharetra orci mollis, auctor tellus.",
+        },
       })
 
-      if (!barbershop) {
-        console.log(`🏪 Criando barbearia: ${name}`)
-
-        // Criar barbearia
-        barbershop = await prisma.barbershop.create({
+      // Criar serviços
+      for (const service of services) {
+        await prisma.barbershopService.create({
           data: {
-            name,
-            address,
-            imageUrl: imageUrl,
-            phones: ["(11) 99999-9999", "(11) 99999-9999"],
-            description:
-              "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec ac augue ullamcorper, pharetra orci mollis, auctor tellus. Phasellus pharetra erat ac libero efficitur tempus. Donec pretium convallis iaculis. Etiam eu felis sollicitudin, cursus mi vitae, iaculis magna. Nam non erat neque. In hac habitasse platea dictumst. Pellentesque molestie accumsan tellus id laoreet.",
+            name: service.name,
+            description: service.description,
+            price: service.price,
+            barbershopId: barbershop.id,
+            imageUrl: service.imageUrl,
+          },
+        })
+      }
+
+      // Para a PRIMEIRA barbearia: admin como dono
+      if (i === 0) {
+        await prisma.barber.create({
+          data: {
+            userId: adminUser.id,
+            barbershopId: barbershop.id,
+            role: "ADMIN",
+            isActive: true,
+          },
+        })
+        console.log(`✅ ${adminUser.name} é ADMIN de: ${creativeNames[i]}`)
+      }
+
+      // Para outras barbearias: criar barbeiros fictícios
+      else if (i <= barberNames.length) {
+        const barberIndex = i - 1
+
+        // Criar usuário barbeiro
+        const barberUser = await prisma.user.create({
+          data: {
+            name: barberNames[barberIndex],
+            email: barberEmails[barberIndex],
+            image: "https://via.placeholder.com/150",
           },
         })
 
-        // Criar serviços para a barbearia
-        for (const service of services) {
-          await prisma.barbershopService.create({
-            data: {
-              name: service.name,
-              description: service.description,
-              price: service.price,
-              barbershopId: barbershop.id,
-              imageUrl: service.imageUrl,
-            },
-          })
-        }
-      } else {
-        console.log(`🏪 Barbearia já existe: ${name}`)
-      }
-
-      barbershops.push(barbershop)
-
-      // Para a PRIMEIRA barbearia, definir o admin como dono
-      if (i === 0) {
-        const existingBarber = await prisma.barber.findUnique({
-          where: { userId: adminUser.id },
+        // Criar barbeiro
+        await prisma.barber.create({
+          data: {
+            userId: barberUser.id,
+            barbershopId: barbershop.id,
+            role: "BARBER",
+            isActive: true,
+          },
         })
 
-        if (!existingBarber) {
-          await prisma.barber.create({
-            data: {
-              userId: adminUser.id,
-              barbershopId: barbershop.id,
-              role: "ADMIN",
-              isActive: true,
-            },
-          })
-          console.log(
-            `✅ ${adminUser.name} definido como ADMIN da barbearia: ${name}`,
-          )
-        } else {
-          console.log(`✅ ${adminUser.name} já é barbeiro/admin`)
-        }
-      }
-
-      // Para as outras barbearias, criar barbeiros fictícios
-      if (i > 0 && i < barberNames.length + 1) {
-        const barberIndex = i - 1
-
-        // Verificar se o barbeiro já existe
-        let barberUser = await prisma.user.findUnique({
-          where: { email: barberEmails[barberIndex] },
-        })
-
-        if (!barberUser) {
-          // Criar usuário barbeiro
-          barberUser = await prisma.user.create({
-            data: {
-              name: barberNames[barberIndex],
-              email: barberEmails[barberIndex],
-              image: "https://via.placeholder.com/150",
-            },
-          })
-
-          // Criar barbeiro
-          await prisma.barber.create({
-            data: {
-              userId: barberUser.id,
-              barbershopId: barbershop.id,
-              role: "BARBER",
-              isActive: true,
-            },
-          })
-
-          console.log(
-            `👨‍💼 Barbeiro criado: ${barberNames[barberIndex]} na ${name}`,
-          )
-        }
+        console.log(
+          `👨‍💼 Barbeiro: ${barberNames[barberIndex]} → ${creativeNames[i]}`,
+        )
       }
     }
 
     console.log("🎉 Seed concluído com sucesso!")
-    console.log(`👤 Admin: ${adminUser.name} (${adminUser.email})`)
-    console.log(`🏪 Admin é dono da: ${creativeNames[0]}`)
-    console.log(`📊 Total de barbearias: ${barbershops.length}`)
+    console.log(`👑 ADMIN: ${adminUser.name} → ${creativeNames[0]}`)
   } catch (error) {
     console.error("❌ Erro durante o seed:", error)
     throw error
