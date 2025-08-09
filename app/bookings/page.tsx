@@ -5,11 +5,13 @@ import Header from "../_components/header"
 import { getConcludedBookings } from "../_data/get-concluded-bookings"
 import { getConfirmedBookings } from "../_data/get-confirmed-bookings"
 import { authOptions } from "../_lib/auth"
+import SignInDialog from "../_components/sign-in-dialog"
 
 const Bookings = async () => {
   const session = await getServerSession(authOptions)
   if (!session?.user) {
     // TODO: mostrar pop-up de login
+    ;<SignInDialog />
     return notFound()
   }
   const confirmedBookings = await getConfirmedBookings()

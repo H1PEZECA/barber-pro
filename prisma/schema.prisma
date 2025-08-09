@@ -1,3 +1,6 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,84 +14,89 @@ model User {
   id            String    @id @default(cuid())
   name          String?
   email         String    @unique
-  emailVerified DateTime?
   image         String?
-  accounts      Account[]
-  sessions      Session[]
-  bookings      Booking[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-}
-
-model Account {
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String?
-  access_token      String?
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String?
-  session_state     String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@id([provider, providerAccountId])
-}
-
-model Session {
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model VerificationToken {
-  identifier String
-  token      String
-  expires    DateTime
-
-  @@id([identifier, token])
+  
+  // Relacionamento com barbeiros
+  barber        Barber?
+  
+  // Relacionamento com agendamentos (cliente)
+  bookings      Booking[]
 }
 
 model Barbershop {
-  id          String              @id @default(uuid())
+  id          String   @id @default(cuid())
   name        String
   address     String
+  imageUrl    String
   phones      String[]
   description String
-  imageUrl    String
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relacionamentos
   services    BarbershopService[]
+  barbers     Barber[]
+  bookings    Booking[]
+}
+
+model Barber {
+  id           String     @id @default(cuid())
+  userId       String     @unique
+  barbershopId String
+  role         BarberRole @default(BARBER)
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  
+  // Relacionamentos
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  bookings     Booking[]
 }
 
 model BarbershopService {
-  id           String     @id @default(uuid())
+  id           String     @id @default(cuid())
   name         String
   description  String
   imageUrl     String
   price        Decimal    @db.Decimal(10, 2)
   barbershopId String
-  barbershop   Barbershop @relation(fields: [barbershopId], references: [id])
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  
+  // Relacionamentos
+  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
   bookings     Booking[]
 }
 
 model Booking {
-  id        String            @id @default(uuid())
-  userId    String
-  user      User              @relation(fields: [userId], references: [id])
-  serviceId String
-  service   BarbershopService @relation(fields: [serviceId], references: [id])
-  date      DateTime
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
+  id           String            @id @default(cuid())
+  userId       String
+  barberId     String?
+  barbershopId String
+  serviceId    String
+  date         DateTime
+  status       BookingStatus     @default(CONFIRMED)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  
+  // Relacionamentos
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  barber       Barber?           @relation(fields: [barberId], references: [id], onDelete: SetNull)
+  barbershop   Barbershop        @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  service      BarbershopService @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+}
+
+enum BarberRole {
+  ADMIN    // Dono da barbearia
+  MANAGER  // Gerente
+  BARBER   // Barbeiro comum
+}
+
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+  COMPLETED
 }
