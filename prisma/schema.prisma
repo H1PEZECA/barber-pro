@@ -16,6 +16,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   bookings      Booking[]
+  barber        Barber?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -69,6 +70,22 @@ model Barbershop {
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
   services    BarbershopService[]
+  barbers     Barber[]
+  bookings    Booking[]
+}
+
+model Barber {
+  id           String     @id @default(uuid())
+  userId       String     @unique
+  barbershopId String
+  role         BarberRole @default(BARBER)
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  bookings     Booking[]
 }
 
 model BarbershopService {
@@ -78,17 +95,37 @@ model BarbershopService {
   imageUrl     String
   price        Decimal    @db.Decimal(10, 2)
   barbershopId String
-  barbershop   Barbershop @relation(fields: [barbershopId], references: [id])
+  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
   bookings     Booking[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 }
 
 model Booking {
-  id        String            @id @default(uuid())
-  userId    String
-  user      User              @relation(fields: [userId], references: [id])
-  serviceId String
-  service   BarbershopService @relation(fields: [serviceId], references: [id])
-  date      DateTime
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
+  id           String            @id @default(uuid())
+  userId       String
+  barberId     String?
+  barbershopId String
+  serviceId    String
+  date         DateTime
+  status       BookingStatus     @default(CONFIRMED)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  barber       Barber?           @relation(fields: [barberId], references: [id], onDelete: SetNull)
+  barbershop   Barbershop        @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+  service      BarbershopService @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+}
+
+enum BarberRole {
+  ADMIN    // Dono da barbearia
+  MANAGER  // Gerente
+  BARBER   // Barbeiro comum
+}
+
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+  COMPLETED
 }
