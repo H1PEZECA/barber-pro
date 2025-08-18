@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import { Barbershop, BarbershopService, Booking } from "@prisma/client"
@@ -10,12 +11,22 @@ import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import { createBooking } from "../_actions/create-booking"
 import { getBookings } from "../_actions/get-bookings"
+import { getServiceEmployees } from "../_actions/get-service-employees"
 import BookingSummary from "./booking-summary"
 import SignInDialog from "./sign-in-dialog"
 import { Button } from "./ui/button"
 import { Calendar } from "./ui/calendar"
 import { Card, CardContent } from "./ui/card"
 import { Dialog, DialogContent } from "./ui/dialog"
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select"
 import {
   Sheet,
   SheetContent,
@@ -25,10 +36,30 @@ import {
 } from "./ui/sheet"
 
 interface ServiceItemProps {
-  service: BarbershopService
+  service: BarbershopService & {
+    id: string
+    employees?: { id: string; name: string }[]
+    barbershopId: string
+  }
   barbershop: Pick<Barbershop, "name">
 }
 
+// ✅ TIPO CORRETO PARA OS BOOKINGS COM INCLUDES
+type BookingWithIncludes = {
+  id: string
+  userId: string
+  serviceId: string
+  barbershopId: string
+  employeeId: string | null
+  scheduledAt: Date
+  status: any // ou BookingStatus se importado
+  notes: string | null
+  createdAt: Date
+  updatedAt: Date
+  // ✅ Includes opcionais para flexibilidade
+  service?: any
+  employee?: any
+}
 const TIME_LIST = [
   "08:00",
   "08:30",
@@ -70,8 +101,8 @@ const getTimeList = ({ bookings, selectedDay }: GetTimeListProps) => {
 
     const hasBookingOnCurrentTime = bookings.some(
       (booking) =>
-        booking.date.getHours() === hour &&
-        booking.date.getMinutes() === minutes,
+        booking.scheduledAt.getHours() === hour &&
+        booking.scheduledAt.getMinutes() === minutes,
     )
     if (hasBookingOnCurrentTime) {
       return false
@@ -88,28 +119,49 @@ const ServiceItem = ({ service, barbershop }: ServiceItemProps) => {
   const [selectedTime, setSelectedTime] = useState<string | undefined>(
     undefined,
   )
-  const [dayBookings, setDayBookings] = useState<Booking[]>([])
-  const [bookingSheetIsOpen, setBookingSheetIsOpen] = useState(false)
 
+  const [bookingSheetIsOpen, setBookingSheetIsOpen] = useState(false)
+  const [selectedEmployee, setSelectedEmployee] = useState("")
+  const [employees, setEmployees] = useState<{ id: string; name: string }[]>([])
+  // ✅ TIPO CORRETO PARA dayBookings
+  const [dayBookings, setDayBookings] = useState<BookingWithIncludes[]>([])
+
+  // ✅ USEEFFECT CORRIGIDO COM TRATAMENTO DE UNDEFINED
   useEffect(() => {
     const fetch = async () => {
-      if (!selectedDay) return
-      const bookings = await getBookings({
-        date: selectedDay,
-        serviceId: service.id,
-      })
-      setDayBookings(bookings)
+      if (!selectedDay || !service?.id) return
+
+      try {
+        const bookings = await getBookings({ date: selectedDay })
+
+        // ✅ VERIFICAR SE bookings NÃO É UNDEFINED
+        if (bookings) {
+          setDayBookings(bookings as BookingWithIncludes[])
+        } else {
+          setDayBookings([])
+        }
+      } catch (error) {
+        console.error("Erro ao buscar bookings:", error)
+        setDayBookings([])
+      }
     }
+
     fetch()
-  }, [selectedDay, service.id])
+  }, [selectedDay, service?.id])
 
   const selectedDate = useMemo(() => {
-    if (!selectedDay || !selectedTime) return
+    if (!selectedDay || !selectedTime) return undefined
     return set(selectedDay, {
-      hours: Number(selectedTime?.split(":")[0]),
-      minutes: Number(selectedTime?.split(":")[1]),
+      hours: Number(selectedTime.split(":")[0]),
+      minutes: Number(selectedTime.split(":")[1]),
     })
   }, [selectedDay, selectedTime])
+
+  // ✅ NOVO: Buscar dados completos do employee selecionado
+  const selectedEmployeeData = useMemo(() => {
+    if (!selectedEmployee) return undefined
+    return employees.find((emp) => emp.id === selectedEmployee)
+  }, [selectedEmployee, employees])
 
   const handleBookingClick = () => {
     if (data?.user) {
@@ -122,6 +174,7 @@ const ServiceItem = ({ service, barbershop }: ServiceItemProps) => {
     setSelectedDay(undefined)
     setSelectedTime(undefined)
     setDayBookings([])
+    setSelectedEmployee("") // ✅ Limpar employee selecionado
     setBookingSheetIsOpen(false)
   }
 
@@ -138,11 +191,18 @@ const ServiceItem = ({ service, barbershop }: ServiceItemProps) => {
 
   const handleCreateBooking = async () => {
     try {
-      if (!selectedDate) return
+      if (!selectedDate || !selectedEmployee) {
+        toast.error("Selecione data, horário e barbeiro!")
+        return
+      }
+
       await createBooking({
         serviceId: service.id,
+        barbershopId: service.barbershopId,
+        employeeId: selectedEmployee,
         date: selectedDate,
       })
+
       handleBookingSheetOpenChange()
       toast.success("Reserva criada com sucesso!", {
         action: {
@@ -159,10 +219,50 @@ const ServiceItem = ({ service, barbershop }: ServiceItemProps) => {
   const timeList = useMemo(() => {
     if (!selectedDay) return []
     return getTimeList({
-      bookings: dayBookings,
+      bookings: dayBookings as Booking[], // Cast para Booking[] para a função getTimeList
       selectedDay,
     })
   }, [dayBookings, selectedDay])
+
+  // ✅ CORRIGIDO: useEffect para recarregar employees quando date/time mudarem
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      if (!service?.barbershopId) return
+
+      try {
+        const availableEmployees = await getServiceEmployees({
+          barbershopId: service.barbershopId,
+          date: selectedDate,
+        })
+        setEmployees(availableEmployees)
+      } catch (error) {
+        console.error("Erro ao buscar funcionários:", error)
+        toast.error("Erro ao carregar funcionários!")
+      }
+    }
+
+    fetchEmployees()
+  }, [service?.barbershopId, selectedDate])
+
+  useEffect(() => {
+    setSelectedEmployee("")
+  }, [selectedDate])
+
+  // ✅ CORRIGIDO: Limpar employee selecionado quando data/horário mudam
+  useEffect(() => {
+    setSelectedEmployee("")
+  }, [selectedDate])
+
+  useEffect(() => {
+    const fetch = async () => {
+      if (!selectedDay || !service?.id) return
+
+      // ✅ Busca bookings de uma data específica
+      const bookings = await getBookings({ date: selectedDay })
+      setDayBookings(bookings)
+    }
+    fetch()
+  }, [selectedDay, service?.id])
 
   return (
     <>
@@ -207,7 +307,7 @@ const ServiceItem = ({ service, barbershop }: ServiceItemProps) => {
                     <SheetTitle>Fazer Reserva</SheetTitle>
                   </SheetHeader>
 
-                  <div className="border-b border-solid py-5">
+                  <div className="border-b border-solid py-0">
                     <Calendar
                       mode="single"
                       locale={ptBR}
@@ -268,19 +368,64 @@ const ServiceItem = ({ service, barbershop }: ServiceItemProps) => {
                     </div>
                   )}
 
+                  {/* ✅ SEÇÃO PARA SELECIONAR BARBEIROS */}
                   {selectedDate && (
+                    <div className="border-b border-solid p-5">
+                      <Select
+                        value={selectedEmployee || undefined}
+                        onValueChange={(value) => setSelectedEmployee(value)}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Escolha um barbeiro disponível" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectLabel>Barbeiros Disponíveis</SelectLabel>
+                            {employees.length > 0 ? (
+                              employees.map((employee) => (
+                                <SelectItem
+                                  key={employee.id}
+                                  value={employee.id}
+                                >
+                                  {employee.name}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <div className="p-2 text-sm text-muted-foreground">
+                                Nenhum barbeiro disponível neste horário
+                              </div>
+                            )}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  {/* ✅ RESUMO DO AGENDAMENTO - passa selectedEmployeeData */}
+                  {selectedDate && selectedEmployee && (
                     <div className="p-5">
                       <BookingSummary
                         barbershop={barbershop}
                         service={service}
                         selectedDate={selectedDate}
+                        employee={selectedEmployeeData} // ✅ Passa o objeto completo do employee
                       />
                     </div>
                   )}
+
                   <SheetFooter className="mt-5 px-5">
                     <Button
+                      variant="secondary"
+                      onClick={() => setBookingSheetIsOpen(false)}
+                      className="mt-2"
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
                       onClick={handleCreateBooking}
-                      disabled={!selectedDay || !selectedTime}
+                      disabled={
+                        !selectedDay || !selectedTime || !selectedEmployee
+                      } // ✅ Inclui employee na validação
                     >
                       Confirmar
                     </Button>

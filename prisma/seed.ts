@@ -27,6 +27,7 @@ async function seedDatabase() {
       "https://utfs.io/f/07842cfb-7b30-4fdc-accc-719618dfa1f2-17s.png",
       "https://utfs.io/f/0522fdaf-0357-4213-8f52-1d83c3dcb6cd-18e.png",
     ]
+
     // Nomes criativos para as barbearias
     const creativeNames = [
       "Barbearia Vintage",
@@ -100,9 +101,113 @@ async function seedDatabase() {
       },
     ]
 
-    // Criar 10 barbearias com nomes e endereços fictícios
-    const barbershops = []
-    for (let i = 0; i < 10; i++) {
+    // 🔹 PRIMEIRO: Criar um usuário para o barbeiro
+    const user = await prisma.user.create({
+      data: {
+        id: "test-user-id-123", // ID fixo para teste
+        name: "João Silva",
+        email: "joao.barbeiro@example.com",
+        password: "123456",
+      },
+    })
+
+    // 🔹 SEGUNDO: Criar a primeira barbearia
+    const firstBarbershop = await prisma.barbershop.create({
+      data: {
+        name: creativeNames[0], // "Barbearia Vintage"
+        address: addresses[0],
+        imageUrl: images[0],
+        phones: ["(11) 99999-9999", "(11) 99999-9999"],
+        description:
+          "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec ac augue ullamcorper, pharetra orci mollis, auctor tellus. Phasellus pharetra erat ac libero efficitur tempus. Donec pretium convallis iaculis. Etiam eu felis sollicitudin, cursus mi vitae, iaculis magna. Nam non erat neque. In hac habitasse platea dictumst. Pellentesque molestie accumsan tellus id laoreet.",
+      },
+    })
+
+    // 🔹 TERCEIRO: Criar o barbeiro ligado à primeira barbearia
+    const barber = await prisma.barber.create({
+      data: {
+        userId: user.id,
+        barbershopId: firstBarbershop.id,
+        licenseNumber: "BR123456789",
+        specialties: ["Corte Masculino", "Barba", "Bigode"],
+        yearsOfExperience: 5,
+      },
+    })
+
+    // 🔹 QUARTO: Criar usuários para os funcionários
+    const employee1User = await prisma.user.create({
+      data: {
+        id: "employee-user-id-001",
+        name: "Carlos Pereira",
+        email: "carlos.funcionario@example.com",
+        password: "123456",
+      },
+    })
+
+    const employee2User = await prisma.user.create({
+      data: {
+        id: "employee-user-id-002",
+        name: "Ricardo Santos",
+        email: "ricardo.funcionario@example.com",
+        password: "123456",
+      },
+    })
+
+    // 🔹 QUINTO: Criar os 2 funcionários
+    const employee1 = await prisma.employee.create({
+      data: {
+        userId: employee1User.id,
+        barberId: barber.id,
+        barbershopId: firstBarbershop.id,
+        employeeCode: "EMP001", // ← CAMPO OBRIGATÓRIO que está faltando!
+        position: "Barbeiro", // ← Use position ao invés de role
+        salary: 2500.0,
+        hireDate: new Date("2023-01-15"),
+        isActive: true,
+      },
+    })
+
+    const employee2 = await prisma.employee.create({
+      data: {
+        userId: employee2User.id,
+        barberId: barber.id,
+        barbershopId: firstBarbershop.id,
+        employeeCode: "EMP002", // ← CAMPO OBRIGATÓRIO que está faltando!
+        position: "Assistente", // ← Use position ao invés de role
+        salary: 1800.0,
+        hireDate: new Date("2023-03-10"),
+        isActive: true,
+      },
+    })
+
+    console.log(`✅ Barbeiro criado: ${barber.id}`)
+    console.log(`✅ Ligado à barbearia: ${firstBarbershop.name}`)
+    console.log(
+      `✅ Funcionário 1 criado: ${employee1.id} - ${employee1User.name}`,
+    )
+    console.log(
+      `✅ Funcionário 2 criado: ${employee2.id} - ${employee2User.name}`,
+    )
+
+    // 🔹 Adicionar serviços à primeira barbearia
+    for (const service of services) {
+      await prisma.barbershopService.create({
+        data: {
+          name: service.name,
+          description: service.description,
+          price: service.price,
+          barbershop: {
+            connect: {
+              id: firstBarbershop.id,
+            },
+          },
+          imageUrl: service.imageUrl,
+        },
+      })
+    }
+
+    // 🔹 Criar as outras 9 barbearias SEM barbeiro (só pra teste)
+    for (let i = 1; i < 10; i++) {
       const name = creativeNames[i]
       const address = addresses[i]
       const imageUrl = images[i]
@@ -118,6 +223,7 @@ async function seedDatabase() {
         },
       })
 
+      // Adicionar serviços às outras barbearias também
       for (const service of services) {
         await prisma.barbershopService.create({
           data: {
@@ -133,9 +239,16 @@ async function seedDatabase() {
           },
         })
       }
-
-      barbershops.push(barbershop)
     }
+
+    console.log("✅ Seed concluído com sucesso!")
+    console.log("📊 Resultado:")
+    console.log("   • 1 usuário criado")
+    console.log("   • 1 barbeiro criado")
+    console.log("   • 10 barbearias criadas")
+    console.log("   • 60 serviços criados (6 por barbearia)")
+    console.log("   • Primeira barbearia tem barbeiro dono")
+    console.log("   • Outras 9 barbearias sem barbeiro")
 
     // Fechar a conexão com o banco de dados
     await prisma.$disconnect()

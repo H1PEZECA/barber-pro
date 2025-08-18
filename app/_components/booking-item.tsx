@@ -41,17 +41,57 @@ interface BookingItemProps {
           barbershop: true
         }
       }
+      employee: {
+        include: {
+          user: {
+            select: {
+              id: true
+              name: true
+            }
+          }
+        }
+      }
     }
   }>
 }
 
-// TODO: receber agendamento como prop
 const BookingItem = ({ booking }: BookingItemProps) => {
   const [isSheetOpen, setIsSheetOpen] = useState(false)
   const {
     service: { barbershop },
   } = booking
-  const isConfirmed = isFuture(booking.date)
+  const isConfirmed = isFuture(booking.scheduledAt)
+
+  console.log("=== BOOKING COMPLETO ===", booking)
+  console.log("=== BOOKING.EMPLOYEE ===", booking.employee)
+  console.log("=== BOOKING.EMPLOYEE?.USER ===", booking.employee?.user)
+
+  // ✅ NOVA LÓGICA: Mais robusta para preparar dados do employee
+  const employeeData = (() => {
+    // Se não tem employee, retorna undefined
+    if (!booking.employee) {
+      console.log("❌ Sem employee no booking")
+      return undefined
+    }
+
+    // Se tem employee mas sem user, cria fallback
+    if (!booking.employee.user) {
+      console.log("⚠️ Employee sem user, usando fallback")
+      return {
+        id: booking.employee.id,
+        name: "Funcionário (dados incompletos)",
+      }
+    }
+
+    // Caso normal: employee com user
+    const result = {
+      id: booking.employee.id,
+      name: booking.employee.user.name || "Nome não informado",
+    }
+    console.log("✅ EmployeeData criado:", result)
+    return result
+  })()
+
   const handleCancelBooking = async () => {
     try {
       await deleteBooking(booking.id)
@@ -62,9 +102,11 @@ const BookingItem = ({ booking }: BookingItemProps) => {
       toast.error("Erro ao cancelar reserva. Tente novamente.")
     }
   }
+
   const handleSheetOpenChange = (isOpen: boolean) => {
     setIsSheetOpen(isOpen)
   }
+
   return (
     <Sheet open={isSheetOpen} onOpenChange={handleSheetOpenChange}>
       <SheetTrigger className="w-full min-w-[90%]">
@@ -86,23 +128,38 @@ const BookingItem = ({ booking }: BookingItemProps) => {
                 </Avatar>
                 <p className="text-sm">{booking.service.barbershop.name}</p>
               </div>
+
+              {/* ✅ MELHORADO: Exibir nome do barbeiro no card principal */}
+              {employeeData ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400">Barbeiro:</span>
+                  <p className="text-xs font-medium">{employeeData.name}</p>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400">Barbeiro:</span>
+                  <p className="text-xs font-medium text-red-400">
+                    Não atribuído
+                  </p>
+                </div>
+              )}
             </div>
             {/* DIREITA */}
             <div className="flex flex-col items-center justify-center border-l-2 border-solid px-5">
               <p className="text-sm capitalize">
-                {format(booking.date, "MMMM", { locale: ptBR })}
+                {format(booking.scheduledAt, "MMMM", { locale: ptBR })}
               </p>
-
               <p className="text-2xl">
-                {format(booking.date, "dd", { locale: ptBR })}
+                {format(booking.scheduledAt, "dd", { locale: ptBR })}
               </p>
               <p className="text-sm">
-                {format(booking.date, "HH:mm", { locale: ptBR })}
+                {format(booking.scheduledAt, "HH:mm", { locale: ptBR })}
               </p>
             </div>
           </CardContent>
         </Card>
       </SheetTrigger>
+
       <SheetContent className="w-[85%]">
         <SheetHeader>
           <SheetTitle className="text-left">Informações da Reserva</SheetTitle>
@@ -111,7 +168,7 @@ const BookingItem = ({ booking }: BookingItemProps) => {
         <div className="relative mt-6 flex h-[180px] w-full items-end">
           <Image
             alt={`Mapa da barbearia ${booking.service.barbershop.name}`}
-            src="/map.png"
+            src="/adress.svg"
             fill
             className="rounded-xl object-cover"
           />
@@ -138,11 +195,13 @@ const BookingItem = ({ booking }: BookingItemProps) => {
             {isConfirmed ? "Confirmado" : "Finalizado"}
           </Badge>
 
+          {/* ✅ SEM CONSOLE.LOG NO JSX - APENAS O COMPONENTE */}
           <div className="mb-3 mt-6">
             <BookingSummary
               barbershop={barbershop}
               service={booking.service}
-              selectedDate={booking.date}
+              selectedDate={booking.scheduledAt}
+              employee={employeeData}
             />
           </div>
 
@@ -152,6 +211,7 @@ const BookingItem = ({ booking }: BookingItemProps) => {
             ))}
           </div>
         </div>
+
         <SheetFooter className="mt-6">
           <div className="flex items-center gap-3">
             <SheetClose asChild>

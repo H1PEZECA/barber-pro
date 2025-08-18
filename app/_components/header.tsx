@@ -5,6 +5,7 @@ import Link from "next/link"
 import SidebarItem from "./sidebar-item"
 import { Button } from "./ui/button"
 import { Card, CardContent } from "./ui/card"
+import { ModeToggle } from "./ui/dark-mode"
 import { Sheet, SheetTrigger } from "./ui/sheet"
 const Header = () => {
   return (
@@ -14,14 +15,18 @@ const Header = () => {
           <Link href="/">
             <Image src="/logonew.svg" alt="logo" width={80} height={120} />
           </Link>
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button size="icon" variant="outline">
-                <MenuIcon />
-              </Button>
-            </SheetTrigger>
-            <SidebarItem />
-          </Sheet>
+          <div className="flex items-center gap-3">
+            <Sheet>
+              {/* Dark mode toggle */}
+              <ModeToggle />
+              <SheetTrigger asChild>
+                <Button size="icon" variant="outline">
+                  <MenuIcon />
+                </Button>
+              </SheetTrigger>
+              <SidebarItem />
+            </Sheet>
+          </div>
         </CardContent>
       </Card>
     </div>

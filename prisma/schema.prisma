@@ -11,6 +11,7 @@ model User {
   id            String    @id @default(cuid())
   name          String?
   email         String    @unique
+  password      String?    // 🔹 Removido @unique
   emailVerified DateTime?
   image         String?
   accounts      Account[]
@@ -19,10 +20,10 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   role          UserRole  @default(USER)
-  
-  // Relacionamentos específicos por role
-  barberProfile    Barber?   // Se for barbeiro
-  employeeProfile  Employee? // Se for funcionário
+
+  // Relacionamentos específicos
+  barberProfile   Barber?   // Se for barbeiro
+  employeeProfile Employee? // Se for funcionário
 }
 
 model Account {
@@ -64,133 +65,123 @@ model VerificationToken {
   @@id([identifier, token])
 }
 
-// ENTIDADE BARBEIRO (DONO DA BARBEARIA)
+// ENTIDADE BARBEIRO (DONO)
 model Barber {
-  id           String       @id @default(uuid())
-  userId       String       @unique // Relação 1:1 com User
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  // Informações específicas do barbeiro
-  licenseNumber String?     // Número da licença profissional
-  specialties   String[]    // Especialidades do barbeiro
-  yearsOfExperience Int?    // Anos de experiência
-  
-  // Relacionamentos
-  barbershops   Barbershop? // Um barbeiro pode ter múltiplas barbearias
-  employees     Employee[]   // Funcionários que trabalham para este barbeiro
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-// ENTIDADE FUNCIONÁRIO (TRABALHA PARA UM BARBEIRO)
-model Employee {
-  id        String   @id @default(uuid())
-  userId    String   @unique // Relação 1:1 com User
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  // Informações específicas do funcionário
-  barberId      String  // Para qual barbeiro trabalha
-  barber        Barber  @relation(fields: [barberId], references: [id], onDelete: Cascade)
-  barbershopId  String  // Em qual barbearia trabalha
-  barbershop    Barbershop @relation(fields: [barbershopId], references: [id])
-  
-  // Dados do funcionário
-  employeeCode  String  @unique // Código único do funcionário
-  salary        Decimal? @db.Decimal(10, 2)
-  hireDate      DateTime @default(now())
-  position      String? // Cargo: "Barbeiro Junior", "Recepcionista", etc.
-  workSchedule  Json?   // Horários de trabalho (formato JSON)
-  isActive      Boolean @default(true)
-  
-  // Relacionamentos
-  assignedBookings Booking[] // Atendimentos designados para este funcionário
-  
+  licenseNumber     String?
+  specialties       String[]
+  yearsOfExperience Int?
+
+  // Chave estrangeira da barbearia
+  barbershopId String     @unique
+  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+
+  employees Employee[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
-  @@unique([barberId, employeeCode]) // Código único por barbeiro
 }
 
 model Barbershop {
-  id          String              @id @default(uuid())
+  id          String   @id @default(uuid())
   name        String
   address     String
   phones      String[]
   description String
   imageUrl    String
-  
-  // Relacionamento com o dono (barbeiro)
-  barberId    String @unique
-  barber      Barber?             @relation(fields: [barberId], references: [id])
-  
-  // Configurações da barbearia
-  openingHours Json?              // Horários de funcionamento
-  isActive     Boolean            @default(true)
-  
-  // Relacionamentos
-  services    BarbershopService[]
-  employees   Employee[]          // Funcionários que trabalham nesta barbearia
-  bookings    Booking[]           // Todos os agendamentos da barbearia
-  
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
+
+  // Relação inversa obrigatória
+  barber Barber?
+
+  openingHours Json?
+  isActive     Boolean @default(true)
+
+  services  BarbershopService[]
+  employees Employee[]
+  bookings  Booking[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-model BarbershopService {
-  id           String     @id @default(uuid())
-  name         String
-  description  String
-  imageUrl     String
-  price        Decimal    @db.Decimal(10, 2)
-  isActive     Boolean    @default(true)
-  
+// ENTIDADE FUNCIONÁRIO
+model Employee {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  barberId     String
+  barber       Barber     @relation(fields: [barberId], references: [id], onDelete: Cascade)
   barbershopId String
-  barbershop   Barbershop @relation(fields: [barbershopId], references: [id])
+  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+
+  employeeCode String   @unique
+  salary       Decimal? @db.Decimal(10, 2)
+  hireDate     DateTime @default(now())
+  position     String?
+  workSchedule Json?
+  isActive     Boolean  @default(true)
+
+  assignedBookings Booking[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([barberId, employeeCode])
+}
+
+
+model BarbershopService {
+  id          String  @id @default(uuid())
+  name        String
+  description String
+  imageUrl    String
+  price       Decimal @db.Decimal(10, 2)
+  isActive    Boolean @default(true)
+
+  barbershopId String
+  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
   bookings     Booking[]
 }
 
 model Booking {
-  id        String            @id @default(uuid())
-  
-  // Cliente que fez o agendamento
-  userId    String
-  user      User              @relation(fields: [userId], references: [id])
-  
-  // Serviço agendado
+  id String @id @default(uuid())
+
+  userId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   serviceId String
-  service   BarbershopService @relation(fields: [serviceId], references: [id])
-  
-  // Barbearia onde será o atendimento
+  service   BarbershopService @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
   barbershopId String
-  barbershop   Barbershop     @relation(fields: [barbershopId], references: [id])
-  
-  // Funcionário designado (opcional - pode ser o próprio barbeiro)
+  barbershop   Barbershop @relation(fields: [barbershopId], references: [id], onDelete: Cascade)
+
   employeeId String?
-  employee   Employee?        @relation(fields: [employeeId], references: [id])
-  
-  // Informações do agendamento
-  date      DateTime
-  status    BookingStatus    @default(SCHEDULED)
-  notes     String?          // Observações
-  
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
+  employee   Employee? @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+
+  scheduledAt DateTime // data + horário juntos
+
+  status BookingStatus @default(SCHEDULED)
+  notes  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-// ENUM PARA ROLES
+
 enum UserRole {
-  USER     // Cliente padrão - acessa app/page.tsx
-  EMPLOYEE // Funcionário - acessa /app/employee/page.tsx
-  BARBER   // Barbeiro (dono) - acessa /app/barber/page.tsx
+  USER
+  EMPLOYEE
+  BARBER
 }
 
-// ENUM PARA STATUS DOS AGENDAMENTOS
 enum BookingStatus {
-  SCHEDULED  // Agendado
-  CONFIRMED  // Confirmado
-  IN_PROGRESS // Em andamento
-  COMPLETED  // Concluído
-  CANCELLED  // Cancelado
-  NO_SHOW    // Não compareceu
+  SCHEDULED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
 }

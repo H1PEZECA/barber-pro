@@ -4,6 +4,7 @@ import { Toaster } from "sonner"
 import Footer from "./_components/footer"
 import AuthProvider from "./_providers/auth"
 import "./globals.css"
+import { ThemeProvider } from "./_components/theme-provider"
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -27,17 +28,24 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AuthProvider>
-          <div className="flex h-full flex-col">
-            <div className="flex-1">{children}</div>
-            <Footer />
-          </div>
-        </AuthProvider>
-        <Toaster />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AuthProvider>
+            <div className="flex h-full flex-col">
+              <div className="flex-1">{children}</div>
+              <Footer />
+            </div>
+          </AuthProvider>
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   )

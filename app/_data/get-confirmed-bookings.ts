@@ -20,7 +20,7 @@ export const getConfirmedBookings = async () => {
   return db.booking.findMany({
     where: {
       userId: user.id,
-      date: {
+      scheduledAt: {
         gte: new Date(),
       },
     },
@@ -30,9 +30,16 @@ export const getConfirmedBookings = async () => {
           barbershop: true,
         },
       },
-    },
-    orderBy: {
-      date: "asc",
+      employee: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
     },
   })
 }

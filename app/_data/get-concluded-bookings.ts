@@ -1,8 +1,8 @@
 "use server"
 
 import { getServerSession } from "next-auth"
-import { db } from "../_lib/prisma"
 import { authOptions } from "../_lib/auth"
+import { db } from "../_lib/prisma"
 
 type SessionUser = {
   id: string
@@ -18,7 +18,7 @@ export const getConcludedBookings = async () => {
   return db.booking.findMany({
     where: {
       userId: user.id,
-      date: {
+      scheduledAt: {
         lt: new Date(),
       },
     },
@@ -28,9 +28,16 @@ export const getConcludedBookings = async () => {
           barbershop: true,
         },
       },
-    },
-    orderBy: {
-      date: "asc",
+      employee: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
     },
   })
 }
