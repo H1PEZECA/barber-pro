@@ -7,7 +7,11 @@ interface BookingSummaryProps {
   service: Pick<BarbershopService, "name" | "price">
   barbershop: Pick<Barbershop, "name">
   selectedDate: Date
-  employee?: { id: string; name: string } | undefined
+  // ✅ Aceitar employee de diferentes formatos
+  employee?:
+    | { id: string; name: string } // Formato direto do service-item
+    | { id: string; user: { name: string | null } } // Formato do getServiceEmployees
+    | null
 }
 
 const BookingSummary = ({
@@ -16,8 +20,24 @@ const BookingSummary = ({
   selectedDate,
   employee,
 }: BookingSummaryProps) => {
-  // ✅ DEBUG: Opcional - remover após teste
-  console.log("BookingSummary recebeu employee:", employee)
+  // ✅ Função para extrair o nome do employee independente do formato
+  const getEmployeeName = (): string => {
+    if (!employee) return "Não selecionado"
+
+    // Se tem propriedade 'name' diretamente
+    if ("name" in employee && employee.name) {
+      return employee.name
+    }
+
+    // Se tem propriedade 'user' com 'name'
+    if ("user" in employee && employee.user?.name) {
+      return employee.user.name
+    }
+
+    return "Nome não informado"
+  }
+
+  const employeeName = getEmployeeName()
 
   return (
     <Card>
@@ -53,13 +73,13 @@ const BookingSummary = ({
           <p className="text-sm font-medium">{format(selectedDate, "HH:mm")}</p>
         </div>
 
-        {/* ✅ Barbeiro - com melhor tratamento de erro */}
+        {/* ✅ Barbeiro - compatível com diferentes formatos */}
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-400">Barbeiro</span>
           <p
-            className={`text-sm font-medium ${!employee ? "text-red-400" : ""}`}
+            className={`text-sm font-medium ${employeeName === "Não selecionado" ? "text-red-400" : ""}`}
           >
-            {employee?.name || "Não selecionado"}
+            {employeeName}
           </p>
         </div>
 

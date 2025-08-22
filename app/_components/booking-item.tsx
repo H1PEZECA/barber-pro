@@ -62,19 +62,13 @@ const BookingItem = ({ booking }: BookingItemProps) => {
   } = booking
   const isConfirmed = isFuture(booking.scheduledAt)
 
-  console.log("=== BOOKING COMPLETO ===", booking)
-  console.log("=== BOOKING.EMPLOYEE ===", booking.employee)
-  console.log("=== BOOKING.EMPLOYEE?.USER ===", booking.employee?.user)
-
-  // ✅ NOVA LÓGICA: Mais robusta para preparar dados do employee
+  // ✅ SOLUÇÃO: Preparar employeeData no formato que o BookingSummary espera
   const employeeData = (() => {
-    // Se não tem employee, retorna undefined
     if (!booking.employee) {
       console.log("❌ Sem employee no booking")
       return undefined
     }
 
-    // Se tem employee mas sem user, cria fallback
     if (!booking.employee.user) {
       console.log("⚠️ Employee sem user, usando fallback")
       return {
@@ -83,12 +77,12 @@ const BookingItem = ({ booking }: BookingItemProps) => {
       }
     }
 
-    // Caso normal: employee com user
+    // ✅ RETORNAR NO FORMATO SIMPLES: { id, name }
     const result = {
       id: booking.employee.id,
       name: booking.employee.user.name || "Nome não informado",
     }
-    console.log("✅ EmployeeData criado:", result)
+    console.log("✅ EmployeeData preparado para BookingSummary:", result)
     return result
   })()
 
@@ -129,7 +123,7 @@ const BookingItem = ({ booking }: BookingItemProps) => {
                 <p className="text-sm">{booking.service.barbershop.name}</p>
               </div>
 
-              {/* ✅ MELHORADO: Exibir nome do barbeiro no card principal */}
+              {/* ✅ Exibir nome do barbeiro no card principal */}
               {employeeData ? (
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-gray-400">Barbeiro:</span>
@@ -195,7 +189,7 @@ const BookingItem = ({ booking }: BookingItemProps) => {
             {isConfirmed ? "Confirmado" : "Finalizado"}
           </Badge>
 
-          {/* ✅ SEM CONSOLE.LOG NO JSX - APENAS O COMPONENTE */}
+          {/* ✅ CORRIGIDO: Passa employeeData no formato correto */}
           <div className="mb-3 mt-6">
             <BookingSummary
               barbershop={barbershop}
